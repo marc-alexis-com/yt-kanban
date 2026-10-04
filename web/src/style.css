@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/roboto';
+
+/* YouTube's own dark theme, on purpose: the board lists YouTube videos, so it borrows the
+   look of the place they come from (colors as measured on youtube.com in dark mode). */
+@theme {
+  --color-bg: #0f0f0f;
+  --color-raised: #212121;
+  --color-chip: #272727;
+  --color-chip-hover: #3f3f3f;
+  --color-line: #303030;
+  --color-menu: #282828;
+  --color-text: #f1f1f1;
+  --color-muted: #aaaaaa;
+  --color-red: #ff0033;
+  --color-link: #3ea6ff;
+  --font-sans: 'Roboto Variable', Roboto, Arial, sans-serif;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #555 transparent;
+}

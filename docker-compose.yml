@@ -1,0 +1,13 @@
+# Minimal setup: the app listens on localhost only, your reverse proxy
+# (Caddy, nginx, Traefik…) publishes it over HTTPS **with authentication**.
+# See README.md → "Putting it online".
+services:
+  yt-kanban:
+    build: .
+    container_name: yt-kanban
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/data
+    ports:
+      - "127.0.0.1:3000:3000"
