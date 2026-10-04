@@ -64,7 +64,12 @@ browser ──HTTPS──▶ your reverse proxy (TLS + login) ──▶ yt-kanba
 
 ## Install
 
-Needs Docker with the compose plugin.
+**With an AI coding assistant** (Claude Code, Codex, Cursor…) on your server: give it this
+repository's link and say "install it on this server". It follows [AGENTS.md](AGENTS.md): asks
+for your domain, how to protect the app and an optional API key, installs, puts it online behind
+a login, and checks everything.
+
+**By hand**: needs Docker with the compose plugin.
 
 ```bash
 git clone https://github.com/marc-alexis-com/yt-kanban.git && cd yt-kanban
