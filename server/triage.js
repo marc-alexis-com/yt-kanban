@@ -26,7 +26,7 @@ function buildPrompt(themes, toSort) {
     'You sort YouTube videos into the themes of a personal "to watch" board.',
     `Return exactly ${toSort.length} assignments: one for every video listed at the end, using its id.`,
     'For each video, pick the existing theme it most plausibly belongs to. Decide by channel first (a channel usually stays in the same theme), then by title.',
-    `Use "${KEEP}" only when no theme is plausible at all (placeholder title like "Vidéo abc123", or a title that says nothing about the content).`,
+    `Use "${KEEP}" only when no theme is plausible at all (placeholder title like "Video abc123", or a title that says nothing about the content).`,
     '',
     '## Existing themes, with recent videos already sorted into them',
     examples.join('\n\n'),

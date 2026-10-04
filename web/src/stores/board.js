@@ -4,11 +4,11 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { api } from '../api.js';
 
-const byName = (a, b) => a.localeCompare(b, 'fr');
+const byName = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });
 
 export const useBoard = defineStore('board', () => {
   const videos = ref([]);
-  const inboxTheme = ref('À trier');
+  const inboxTheme = ref('Inbox');
   const triageAvailable = ref(false);
   const loaded = ref(false);
 

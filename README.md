@@ -5,26 +5,29 @@ A self-hosted kanban board for the YouTube videos you want to watch, sorted by t
 
 ![The board: one column per theme, YouTube style](docs/screenshot.webp)
 
-It looks and feels like YouTube (its dark theme, Roboto, thumbnails, ⋮ menus), because that is
-where the videos come from.
+It looks and feels like YouTube (its dark and light themes, Roboto, thumbnails, ⋮ menus),
+because that is where the videos come from.
 
-- **Add**: "Ajouter" in the top bar, then paste YouTube links, one per line, any format
+- **Add**: "Add" in the top bar, then paste YouTube links, one per line, any format
   (`watch?v=`, `youtu.be/`, `shorts/`, bare ids). Title, channel and thumbnail are fetched
-  automatically, no YouTube API key needed. New videos land in the inbox column ("À trier" by
+  automatically, no YouTube API key needed. New videos land in the inbox column ("Inbox" by
   default).
 - **Board**: one column per theme, each a compact list like YouTube's "Up next". Click a theme
   (its chip in the filter bar, or its column title) to open it as a full-page grid, where
-  "Renommer" renames it (or merges it into another theme).
+  "Rename" renames it (or merges it into another theme).
 - **Each video**: hover the thumbnail for a ✓ that marks it watched; the ⋮ menu marks it
-  watched / unwatched, moves it ("Déplacer vers…", with "Nouveau thème…" to create a theme), or
-  removes it. A watched video gets YouTube's red progress bar under its thumbnail.
+  watched / unwatched, moves it ("Move to…", with "New theme…" to create a theme), or removes
+  it. A watched video gets YouTube's red progress bar under its thumbnail.
 - **Top bar**: search by title or channel, the eye icon shows or hides watched videos (hidden by
-  default), and the ⋮ menu exports or imports the whole board as JSON.
-- **AI triage (optional)**: the "Trier N" button asks Claude to sort the inbox into your existing
+  default), and the ⋮ menu opens the settings and exports or imports the whole board as JSON.
+- **Settings**: theme (auto, light, dark; auto follows the system) and card size (small, medium,
+  large: thumbnails, columns and grid together). Saved per browser.
+- **AI triage (optional)**: the "Sort N" button asks Claude to sort the inbox into your existing
   themes. You review the suggestions and untick the wrong ones before anything moves.
 - Works on a phone too.
 
-The UI is in French. One Docker container, one SQLite file, about 25 MB of RAM.
+The UI is in English (your theme names can be in any language). One Docker container, one
+SQLite file, about 25 MB of RAM.
 
 ## How it works
 
@@ -77,8 +80,8 @@ The app now listens on `127.0.0.1:3000` only.
 
 | Variable | Default | |
 |---|---|---|
-| `INBOX_THEME` | `À trier` | Column where new videos land; the AI triage only empties this one. |
-| `ANTHROPIC_API_KEY` | (empty) | Enables the "Trier" button. Get a key from console.anthropic.com. |
+| `INBOX_THEME` | `Inbox` | Column where new videos land; the AI triage only empties this one. |
+| `ANTHROPIC_API_KEY` | (empty) | Enables the "Sort" button. Get a key from console.anthropic.com. |
 | `TRIAGE_MODEL` | `claude-haiku-4-5` | Claude model used for the triage. |
 | `TRIAGE_HINTS_FILE` | `/data/triage-hints.md` | Your own sorting rules, in plain language (re-read on every triage, no restart needed). |
 | `PORT`, `DATA_DIR` | `3000`, `/data` | Already set in the image. |
@@ -92,8 +95,8 @@ Example `triage-hints.md`:
 ```
 
 Themes are just names: a column exists as long as it holds a video. To start, add a few videos,
-then use ⋮ → "Déplacer vers…" → "Nouveau thème…" on a video to create your first themes. A theme
-is renamed (or merged into another) from its page ("Renommer").
+then use ⋮ → "Move to…" → "New theme…" on a video to create your first themes. A theme is
+renamed (or merged into another) from its page ("Rename").
 
 ## Putting it online
 
@@ -127,7 +130,7 @@ to `docker-compose.yml`:
 **Login page instead of the browser's password pop-up**: put a forward-auth service such as
 [tinyauth](https://tinyauth.app) or Authelia in front. The browser then stays signed in for
 weeks. When the session expires while the page is open, the app notices (API calls get
-redirected to the login page) and shows a "Se reconnecter" banner.
+redirected to the login page) and shows a "Sign in again" banner.
 
 **Private network only**: with Tailscale (or WireGuard), skip the proxy and bind the port to
 the VPN address instead of `127.0.0.1`.
@@ -140,7 +143,7 @@ git pull && docker compose up -d --build   # update
 ```
 
 **Backups**: everything is in `data/kanban.db`. Copy it safely while the app runs with
-`sqlite3 data/kanban.db ".backup kanban-$(date +%F).db"`, or use ⋮ → "Exporter (JSON)" in the top bar
+`sqlite3 data/kanban.db ".backup kanban-$(date +%F).db"`, or use ⋮ → "Export (JSON)" in the top bar
 (a JSON file you can re-import anywhere). Thumbnails need no backup.
 
 **Moving to another server**: export from the old one, import into the new one (import merges
@@ -169,3 +172,7 @@ pnpm install
 DATA_DIR=./data pnpm dev:server   # API on :3000 (restarts on change)
 pnpm dev                          # UI on :5173 with hot reload, proxies /api to :3000
 ```
+
+## License
+
+MIT, see [LICENSE](LICENSE).

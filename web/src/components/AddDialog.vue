@@ -12,6 +12,8 @@ const busy = ref(false);
 const result = ref(null);
 const error = ref('');
 
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
 async function submit() {
   if (!urls.value.trim() || busy.value) return;
   busy.value = true;
@@ -28,14 +30,14 @@ async function submit() {
 </script>
 
 <template>
-  <Modal ref="modal" title="Ajouter des vidéos" @close="emit('close')">
+  <Modal ref="modal" title="Add videos" @close="emit('close')">
     <label class="flex flex-col gap-2">
-      <span class="text-sm text-muted">Liens YouTube, un par ligne. Les vidéos arrivent dans « {{ board.inboxTheme }} ».</span>
+      <span class="text-sm text-muted">YouTube links, one per line. Videos land in "{{ board.inboxTheme }}".</span>
       <textarea
         v-model="urls"
         autofocus
         rows="6"
-        class="w-full resize-y rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-link"
+        class="w-full resize-y rounded-lg border border-line bg-field px-3 py-2 text-sm outline-none focus:border-link"
         placeholder="https://www.youtube.com/watch?v=…"
         @keydown.meta.enter="submit"
         @keydown.ctrl.enter="submit"
@@ -45,29 +47,29 @@ async function submit() {
     <p v-if="error" class="text-sm text-red">{{ error }}</p>
     <div v-if="result" class="flex flex-col gap-3 text-sm">
       <div v-if="result.added.length">
-        <p class="font-medium">{{ result.added.length }} vidéo{{ result.added.length > 1 ? 's' : '' }} ajoutée{{ result.added.length > 1 ? 's' : '' }}</p>
+        <p class="font-medium">{{ plural(result.added.length, 'video') }} added</p>
         <ul class="mt-1 text-muted">
           <li v-for="v in result.added" :key="v.id" class="truncate">{{ v.title }}</li>
         </ul>
       </div>
       <div v-if="result.ignored.length">
-        <p class="font-medium">{{ result.ignored.length }} ignorée{{ result.ignored.length > 1 ? 's' : '' }}</p>
+        <p class="font-medium">{{ plural(result.ignored.length, 'line') }} skipped</p>
         <ul class="mt-1 text-muted">
-          <li v-for="(v, i) in result.ignored" :key="i" class="break-all">{{ v.url }} : {{ v.reason }}</li>
+          <li v-for="(v, i) in result.ignored" :key="i" class="break-all">{{ v.url }}: {{ v.reason }}</li>
         </ul>
       </div>
     </div>
 
     <template #actions>
       <button class="rounded-full px-4 py-2 text-sm font-medium hover:bg-chip-hover" @click="modal.close()">
-        {{ result ? 'Fermer' : 'Annuler' }}
+        {{ result ? 'Close' : 'Cancel' }}
       </button>
       <button
         class="rounded-full px-4 py-2 text-sm font-medium text-link hover:bg-link/10 disabled:text-muted disabled:hover:bg-transparent"
         :disabled="busy || !urls.trim()"
         @click="submit"
       >
-        {{ busy ? 'Ajout…' : 'Ajouter' }}
+        {{ busy ? 'Adding…' : 'Add' }}
       </button>
     </template>
   </Modal>

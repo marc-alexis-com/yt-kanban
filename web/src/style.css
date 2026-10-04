@@ -1,20 +1,75 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/roboto';
 
-/* YouTube's own dark theme, on purpose: the board lists YouTube videos, so it borrows the
-   look of the place they come from (colors as measured on youtube.com in dark mode). */
-@theme {
-  --color-bg: #0f0f0f;
-  --color-raised: #212121;
-  --color-chip: #272727;
-  --color-chip-hover: #3f3f3f;
-  --color-line: #303030;
-  --color-menu: #282828;
-  --color-text: #f1f1f1;
-  --color-muted: #aaaaaa;
+/* YouTube's own themes, on purpose: the board lists YouTube videos, so it borrows the look of
+   the place they come from (colors as measured on youtube.com). The palette lives in plain
+   CSS variables so the theme can switch at runtime: dark, light, or auto (follows the system),
+   set on <html data-theme> by the settings store. */
+@theme inline {
+  --color-bg: var(--yt-bg);
+  --color-raised: var(--yt-raised);
+  --color-chip: var(--yt-chip);
+  --color-chip-hover: var(--yt-chip-hover);
+  --color-line: var(--yt-line);
+  --color-menu: var(--yt-menu);
+  --color-field: var(--yt-field);
+  --color-text: var(--yt-text);
+  --color-muted: var(--yt-muted);
   --color-red: #ff0033;
-  --color-link: #3ea6ff;
+  --color-link: var(--yt-link);
   --font-sans: 'Roboto Variable', Roboto, Arial, sans-serif;
+}
+
+:root {
+  --yt-bg: #0f0f0f;
+  --yt-raised: #212121;
+  --yt-chip: #272727;
+  --yt-chip-hover: #3f3f3f;
+  --yt-line: #303030;
+  --yt-menu: #282828;
+  --yt-field: #121212;
+  --yt-text: #f1f1f1;
+  --yt-muted: #aaaaaa;
+  --yt-link: #3ea6ff;
+  --yt-shadow: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+
+  /* Card size (settings): thumbnail width in the columns, column width, grid cell width */
+  --thumb-w: 160px;
+  --col-w: 360px;
+  --grid-min: 300px;
+}
+
+:root[data-theme='light'] {
+  --yt-bg: #ffffff;
+  --yt-raised: #ffffff;
+  --yt-chip: #f2f2f2;
+  --yt-chip-hover: #e5e5e5;
+  --yt-line: #d3d3d3;
+  --yt-menu: #ffffff;
+  --yt-field: #ffffff;
+  --yt-text: #0f0f0f;
+  --yt-muted: #606060;
+  --yt-link: #065fd4;
+  --yt-shadow: rgba(0, 0, 0, 0.2);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme='auto'] {
+    --yt-bg: #ffffff;
+    --yt-raised: #ffffff;
+    --yt-chip: #f2f2f2;
+    --yt-chip-hover: #e5e5e5;
+    --yt-line: #d3d3d3;
+    --yt-menu: #ffffff;
+    --yt-field: #ffffff;
+    --yt-text: #0f0f0f;
+    --yt-muted: #606060;
+    --yt-link: #065fd4;
+    --yt-shadow: rgba(0, 0, 0, 0.2);
+    color-scheme: light;
+  }
 }
 
 html,
@@ -24,13 +79,17 @@ body,
 }
 
 body {
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: var(--yt-bg);
+  color: var(--yt-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #555 transparent;
+  scrollbar-color: color-mix(in srgb, var(--yt-muted) 60%, transparent) transparent;
+}
+
+.menu-shadow {
+  box-shadow: 0 4px 32px var(--yt-shadow);
 }

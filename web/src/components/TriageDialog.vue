@@ -16,6 +16,7 @@ const done = ref(null);
 
 const selected = computed(() => suggestions.value.filter((s) => s.keep));
 const left = computed(() => board.inboxCount - suggestions.value.length);
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 onMounted(async () => {
   try {
@@ -41,17 +42,17 @@ async function apply() {
 </script>
 
 <template>
-  <Modal ref="modal" :title="`Trier « ${board.inboxTheme} »`" @close="emit('close')">
-    <p v-if="loading" class="text-sm text-muted">Claude lit les {{ board.inboxCount }} vidéos à trier…</p>
+  <Modal ref="modal" :title="`Sort &quot;${board.inboxTheme}&quot;`" @close="emit('close')">
+    <p v-if="loading" class="text-sm text-muted">Claude is reading the {{ plural(board.inboxCount, 'video') }} to sort…</p>
     <p v-else-if="error" class="text-sm text-red">{{ error }}</p>
-    <p v-else-if="done" class="text-sm">{{ done.moved }} vidéo{{ done.moved > 1 ? 's' : '' }} rangée{{ done.moved > 1 ? 's' : '' }}.</p>
+    <p v-else-if="done" class="text-sm">{{ plural(done.moved, 'video') }} sorted.</p>
     <template v-else>
       <p class="text-sm text-muted">
         <template v-if="suggestions.length">
-          Décoche ce qui ne te va pas.
-          <template v-if="left > 0">{{ left }} vidéo{{ left > 1 ? 's restent' : ' reste' }} à trier : aucun thème évident.</template>
+          Untick what you disagree with.
+          <template v-if="left > 0">{{ plural(left, 'video') }} left unsorted: no obvious theme.</template>
         </template>
-        <template v-else>Aucune vidéo n'a de thème évident, rien n'est déplacé.</template>
+        <template v-else>No video has an obvious theme, nothing is moved.</template>
       </p>
       <ul class="-mx-2 flex flex-col">
         <li v-for="s in suggestions" :key="s.id">
@@ -68,7 +69,7 @@ async function apply() {
 
     <template #actions>
       <button class="rounded-full px-4 py-2 text-sm font-medium hover:bg-chip-hover" @click="modal.close()">
-        {{ done || error || (!loading && !suggestions.length) ? 'Fermer' : 'Annuler' }}
+        {{ done || error || (!loading && !suggestions.length) ? 'Close' : 'Cancel' }}
       </button>
       <button
         v-if="!loading && !done && suggestions.length"
@@ -76,7 +77,7 @@ async function apply() {
         :disabled="applying || !selected.length"
         @click="apply"
       >
-        {{ applying ? 'Rangement…' : `Ranger ${selected.length} vidéo${selected.length > 1 ? 's' : ''}` }}
+        {{ applying ? 'Sorting…' : `Sort ${plural(selected.length, 'video')}` }}
       </button>
     </template>
   </Modal>

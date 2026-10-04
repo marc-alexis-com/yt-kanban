@@ -72,14 +72,14 @@ const toggleViewed = () => run(() => board.setViewed(props.video, !props.video.v
 const moveTo = (theme) => run(() => board.move(props.video, theme));
 
 function moveToNew() {
-  const theme = prompt('Nom du nouveau thème :')?.trim();
+  const theme = prompt('Name of the new theme:')?.trim();
   if (theme) moveTo(theme);
   else close();
 }
 
 function remove() {
   close();
-  if (confirm(`Retirer « ${props.video.title} » du tableau ?`)) board.remove(props.video).catch(fail);
+  if (confirm(`Remove "${props.video.title}" from the board?`)) board.remove(props.video).catch(fail);
 }
 </script>
 
@@ -98,30 +98,30 @@ function remove() {
     <div
       v-if="openId === video.id"
       ref="menu"
-      class="fixed z-50 w-64 rounded-xl bg-menu py-2 text-sm shadow-[0_4px_32px_rgba(0,0,0,.6)]"
+      class="menu-shadow fixed z-50 w-64 rounded-xl bg-menu py-2 text-sm"
       :style="style"
       role="menu"
     >
       <template v-if="page === 'main'">
         <button class="flex w-full items-center gap-4 px-4 py-2 hover:bg-chip-hover" @click="toggleViewed">
           <Icon :name="video.viewed ? 'eyeOff' : 'check'" />
-          {{ video.viewed ? 'Marquer comme non vue' : 'Marquer comme vue' }}
+          {{ video.viewed ? 'Mark as unwatched' : 'Mark as watched' }}
         </button>
         <button class="flex w-full items-center gap-4 px-4 py-2 hover:bg-chip-hover" @click="showMove">
           <Icon name="move" />
-          Déplacer vers…
+          Move to…
         </button>
         <hr class="my-2 border-line" />
         <button class="flex w-full items-center gap-4 px-4 py-2 hover:bg-chip-hover" @click="remove">
           <Icon name="delete" />
-          Retirer du tableau
+          Remove from board
         </button>
       </template>
 
       <template v-else>
         <button class="flex w-full items-center gap-4 px-4 py-2 text-muted hover:bg-chip-hover" @click="page = 'main'">
           <Icon name="back" />
-          Déplacer vers…
+          Move to…
         </button>
         <div class="max-h-72 overflow-y-auto">
           <button
@@ -137,7 +137,7 @@ function remove() {
         <hr class="my-2 border-line" />
         <button class="flex w-full items-center gap-4 px-4 py-2 hover:bg-chip-hover" @click="moveToNew">
           <Icon name="newFolder" />
-          Nouveau thème…
+          New theme…
         </button>
       </template>
     </div>

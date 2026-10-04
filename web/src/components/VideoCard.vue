@@ -14,7 +14,7 @@ const board = useBoard();
 const thumbFailed = ref(false);
 
 const thumb = props.video.yt_id ? `/thumbs/${props.video.yt_id}.jpg` : null;
-const views = props.video.views ? `${Number(props.video.views).toLocaleString('fr-FR')} vues` : '';
+const views = props.video.views ? `${Number(props.video.views).toLocaleString('en-US')} views` : '';
 
 function quickToggle() {
   board.setViewed(props.video, !props.video.viewed).catch((err) => alert(err.message));
@@ -28,7 +28,7 @@ function quickToggle() {
       target="_blank"
       rel="noopener"
       class="relative block shrink-0 overflow-hidden bg-raised"
-      :class="layout === 'grid' ? 'aspect-video w-full rounded-xl' : 'aspect-video w-40 rounded-lg'"
+      :class="layout === 'grid' ? 'aspect-video w-full rounded-xl' : 'aspect-video w-[var(--thumb-w)] rounded-lg'"
     >
       <img
         v-if="thumb && !thumbFailed"
@@ -38,17 +38,17 @@ function quickToggle() {
         class="h-full w-full object-cover"
         @error="thumbFailed = true"
       />
-      <span v-else class="grid h-full place-items-center px-2 text-center text-xs text-muted">Pas de miniature</span>
+      <span v-else class="grid h-full place-items-center px-2 text-center text-xs text-muted">No thumbnail</span>
 
-      <span v-if="video.duration" class="absolute right-1 bottom-1 rounded bg-black/80 px-1 text-xs font-medium">
+      <span v-if="video.duration" class="absolute right-1 bottom-1 rounded bg-black/80 px-1 text-xs font-medium text-white">
         {{ video.duration }}
       </span>
       <!-- Watched: YouTube's red progress bar, full -->
       <span v-if="video.viewed" class="absolute inset-x-0 bottom-0 h-1 bg-red" />
 
       <button
-        class="absolute top-1 right-1 grid size-8 place-items-center rounded bg-black/80 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100 [@media(hover:none)]:hidden"
-        :title="video.viewed ? 'Marquer comme non vue' : 'Marquer comme vue'"
+        class="absolute top-1 right-1 grid size-8 place-items-center rounded bg-black/80 text-white opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100 [@media(hover:none)]:hidden"
+        :title="video.viewed ? 'Mark as unwatched' : 'Mark as watched'"
         @click.stop.prevent="quickToggle"
       >
         <Icon :name="video.viewed ? 'eyeOff' : 'check'" :size="20" />
@@ -69,7 +69,7 @@ function quickToggle() {
         </a>
         <p class="mt-1 truncate text-muted" :class="layout === 'grid' ? 'text-sm' : 'text-xs'">{{ video.author }}</p>
         <p v-if="views || video.viewed" class="truncate text-muted" :class="layout === 'grid' ? 'text-sm' : 'text-xs'">
-          {{ [views, video.viewed ? 'Vue' : ''].filter(Boolean).join(' • ') }}
+          {{ [views, video.viewed ? 'Watched' : ''].filter(Boolean).join(' • ') }}
         </p>
       </div>
       <!-- Hover-only on desktop, always visible on touch screens -->

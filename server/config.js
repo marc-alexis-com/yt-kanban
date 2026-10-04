@@ -11,7 +11,7 @@ export const config = {
   dbPath: join(dataDir, 'kanban.db'),
   thumbsDir: join(dataDir, 'thumbs'),
   // Column where new videos land; the AI triage only moves videos out of it.
-  inboxTheme: process.env.INBOX_THEME || 'À trier',
+  inboxTheme: process.env.INBOX_THEME || 'Inbox',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
   // Sorting titles into a fixed list is easy: the small model is plenty and costs ~nothing
   triageModel: process.env.TRIAGE_MODEL || 'claude-haiku-4-5',

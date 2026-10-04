@@ -21,7 +21,7 @@ defineExpose({ close: () => dialog.value.close() });
     <div class="flex max-h-[85vh] flex-col">
       <header class="flex items-center justify-between py-3 pr-3 pl-6">
         <h2 class="text-xl">{{ title }}</h2>
-        <button class="grid size-10 place-items-center rounded-full hover:bg-chip-hover" aria-label="Fermer" @click="dialog.close()">
+        <button class="grid size-10 place-items-center rounded-full hover:bg-chip-hover" aria-label="Close" @click="dialog.close()">
           <Icon name="close" />
         </button>
       </header>

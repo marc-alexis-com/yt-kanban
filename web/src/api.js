@@ -16,15 +16,15 @@ async function request(method, path, body) {
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch (err) {
-    throw new Error(`Réseau injoignable (${err.message})`);
+    throw new Error(`Network unreachable (${err.message})`);
   }
   if (res.type === 'opaqueredirect' || res.status === 401) {
     sessionExpired.value = true;
-    throw new Error('Session expirée');
+    throw new Error('Session expired');
   }
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
   return data;
 }
 

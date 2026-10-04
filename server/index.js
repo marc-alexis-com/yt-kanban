@@ -45,15 +45,15 @@ app.post('/api/videos', async (req, res) => {
 
   for (const line of lines) {
     const ytId = extractYtId(line);
-    if (!ytId) { ignored.push({ url: line, reason: 'pas une URL YouTube' }); continue; }
-    if (seen.has(ytId)) { ignored.push({ url: line, reason: 'doublon dans la liste' }); continue; }
+    if (!ytId) { ignored.push({ url: line, reason: 'not a YouTube link' }); continue; }
+    if (seen.has(ytId)) { ignored.push({ url: line, reason: 'twice in the list' }); continue; }
     seen.add(ytId);
     const url = watchUrl(ytId);
-    if (exists.get(ytId, url)) { ignored.push({ url: line, reason: 'déjà sur le tableau' }); continue; }
+    if (exists.get(ytId, url)) { ignored.push({ url: line, reason: 'already on the board' }); continue; }
 
     const [meta] = await Promise.all([fetchMetadata(ytId), ensureThumb(ytId)]);
     const row = insert.get(
-      url, ytId, meta?.title || `Vidéo ${ytId}`, meta?.author || '', config.inboxTheme,
+      url, ytId, meta?.title || `Video ${ytId}`, meta?.author || '', config.inboxTheme,
       new Date().toISOString(),
     );
     added.push(toJson(row));
