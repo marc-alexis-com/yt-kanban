@@ -181,5 +181,7 @@ if (existsSync(webDist)) {
 
 app.listen(config.port, () => {
   console.log(`yt-kanban listening on :${config.port} (data: ${config.dataDir}, triage: ${triageEnabled() ? 'on' : 'off'})`);
-  backfillLengths(); // not awaited: runs in the background
+  // Not awaited: runs in the background, then again every 6 hours for failed lookups.
+  backfillLengths();
+  setInterval(backfillLengths, 6 * 3600 * 1000).unref();
 });

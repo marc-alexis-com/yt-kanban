@@ -1,4 +1,4 @@
-// Background backfill of video lengths: one watch page at a time, a couple per
+// Background backfill of video lengths: one lookup at a time, a couple per
 // second, only for rows that never got one (or whose last attempt is over a day
 // old). Stops early if YouTube keeps refusing, so it never hammers it.
 import { db } from './db.js';
@@ -41,7 +41,7 @@ export async function backfillLengths() {
         done++;
         failures = 0;
       } else if (++failures >= MAX_CONSECUTIVE_FAILURES) {
-        console.warn(`lengths: ${failures} failures in a row, stopping (will retry at next start)`);
+        console.warn(`lengths: ${failures} failures in a row, stopping (will retry later)`);
         break;
       }
       await new Promise((r) => setTimeout(r, DELAY_MS));

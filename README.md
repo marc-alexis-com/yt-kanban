@@ -45,9 +45,11 @@ browser ──HTTPS──▶ your reverse proxy (TLS + login) ──▶ yt-kanba
 - **Server** (`server/`, Node ≥ 22.13, Express, built-in `node:sqlite`, no native module):
   - `index.js`: routes;
   - `db.js`: schema and numbered migrations (`PRAGMA user_version`);
-  - `youtube.js`: link parsing, oEmbed metadata, video length (read from the watch page),
+  - `youtube.js`: link parsing, oEmbed metadata, video length (YouTube Music's player
+    endpoint, which still answers from server IPs, with the watch page as a fallback),
     thumbnails;
-  - `lengths.js`: background lookup of missing lengths at startup (a couple per second);
+  - `lengths.js`: background lookup of missing lengths at startup and every 6 hours (a couple
+    per second);
   - `triage.js`: the Claude call.
 - **Frontend** (`web/`): Vue 3, Pinia, Tailwind CSS v4, built by Vite into `web/dist`, which
   the server serves. All videos are loaded once and filtered in the browser. Roboto is bundled

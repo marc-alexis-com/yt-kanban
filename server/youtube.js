@@ -32,27 +32,59 @@ export async function fetchMetadata(id) {
   }
 }
 
-// Video length in seconds, read from the watch page's ytInitialPlayerResponse
-// (oEmbed has no duration, and the Data API needs a key). Returns
-// { seconds } with seconds = null for a live or upcoming stream, or null when
-// the page could not be read (network error, rate limit, unavailable video).
-const PAGE_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
-  'Accept-Language': 'en-US,en;q=0.9',
-  Cookie: 'SOCS=CAI', // skips the EU cookie consent interstitial
-};
+// Video length in seconds (oEmbed has no duration, and the Data API needs a key).
+// Returns { seconds } with seconds = null for a live or upcoming stream, or null
+// when YouTube did not tell (network error, rate limit, unavailable video).
+//
+// Two sources, both reading the player response's `videoDetails`:
+// 1. the YouTube Music web client's player endpoint: small JSON, and it still
+//    returns videoDetails from datacenter IPs, where the regular clients answer
+//    "Sign in to confirm you're not a bot";
+// 2. the watch page's ytInitialPlayerResponse, as a fallback.
+const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
 
 export async function fetchLength(id) {
+  return (await lengthFromMusicPlayer(id)) ?? (await lengthFromWatchPage(id));
+}
+
+function lengthFrom(player, id) {
+  const details = player?.videoDetails;
+  if (!details || details.videoId !== id) return null;
+  const live = details.isLive || details.isUpcoming
+    || player.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow;
+  const seconds = Number(details.lengthSeconds);
+  return { seconds: !live && Number.isInteger(seconds) && seconds > 0 ? seconds : null };
+}
+
+async function lengthFromMusicPlayer(id) {
   try {
-    const res = await fetch(watchUrl(id), { headers: PAGE_HEADERS, signal: AbortSignal.timeout(10000) });
+    const res = await fetch('https://music.youtube.com/youtubei/v1/player?prettyPrint=false', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: 'https://music.youtube.com', 'User-Agent': BROWSER_UA },
+      body: JSON.stringify({
+        context: { client: { clientName: 'WEB_REMIX', clientVersion: '1.20250101.01.00', hl: 'en', gl: 'US' } },
+        videoId: id,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    return res.ok ? lengthFrom(await res.json(), id) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function lengthFromWatchPage(id) {
+  try {
+    const res = await fetch(watchUrl(id), {
+      headers: {
+        'User-Agent': BROWSER_UA,
+        'Accept-Language': 'en-US,en;q=0.9',
+        Cookie: 'SOCS=CAI', // skips the EU cookie consent interstitial
+      },
+      signal: AbortSignal.timeout(10000),
+    });
     if (!res.ok) return null;
-    const player = extractJsonAfter(await res.text(), 'ytInitialPlayerResponse = ');
-    const details = player?.videoDetails;
-    if (!details || details.videoId !== id) return null;
-    const live = details.isLive || details.isUpcoming
-      || player.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow;
-    const seconds = Number(details.lengthSeconds);
-    return { seconds: !live && Number.isInteger(seconds) && seconds > 0 ? seconds : null };
+    return lengthFrom(extractJsonAfter(await res.text(), 'ytInitialPlayerResponse = '), id);
   } catch {
     return null;
   }
