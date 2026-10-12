@@ -191,6 +191,9 @@ DATA_DIR=./data pnpm dev:server   # API on :3000 (restarts on change)
 pnpm dev                          # UI on :5173 with hot reload, proxies /api to :3000
 ```
 
+`deploy/` is the author's own deployment on his server, an example: it is not needed to
+self-host (see [deploy/README.md](deploy/README.md)).
+
 ## License
 
 MIT, see [LICENSE](LICENSE).

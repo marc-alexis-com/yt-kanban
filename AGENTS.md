@@ -1,7 +1,8 @@
 # Installing yt-kanban: instructions for an AI assistant
 
 You are helping someone install yt-kanban on their own Linux server (a VPS). Follow these steps
-in order. README.md explains how the app works; this file is the procedure.
+in order. README.md explains how the app works; this file is the procedure. Ignore `deploy/`:
+it is the author's own deployment on his server, an example, not needed to self-host.
 
 ## 0. Ask first (only these, in one message)
 
