@@ -7,8 +7,9 @@ import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
-import { db } from './db.js';
-import { extractYtId, watchUrl, fetchMetadata, ensureThumb, thumbPath } from './youtube.js';
+import { db, parseDuration } from './db.js';
+import { extractYtId, watchUrl, fetchMetadata, fetchLength, ensureThumb, thumbPath } from './youtube.js';
+import { backfillLengths } from './lengths.js';
 import { suggestThemes, triageEnabled } from './triage.js';
 
 const webDist = join(dirname(fileURLToPath(import.meta.url)), '..', 'web', 'dist');
@@ -39,8 +40,8 @@ app.post('/api/videos', async (req, res) => {
   const seen = new Set();
   const exists = db.prepare('SELECT 1 FROM videos WHERE yt_id = ? OR url = ?');
   const insert = db.prepare(
-    `INSERT INTO videos (url, yt_id, title, author, theme, added_at)
-     VALUES (?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO videos (url, yt_id, title, author, theme, added_at, length_seconds, length_checked_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   );
 
   for (const line of lines) {
@@ -51,10 +52,11 @@ app.post('/api/videos', async (req, res) => {
     const url = watchUrl(ytId);
     if (exists.get(ytId, url)) { ignored.push({ url: line, reason: 'already on the board' }); continue; }
 
-    const [meta] = await Promise.all([fetchMetadata(ytId), ensureThumb(ytId)]);
+    const [meta, length] = await Promise.all([fetchMetadata(ytId), fetchLength(ytId), ensureThumb(ytId)]);
+    const now = new Date().toISOString();
     const row = insert.get(
-      url, ytId, meta?.title || `Video ${ytId}`, meta?.author || '', config.inboxTheme,
-      new Date().toISOString(),
+      url, ytId, meta?.title || `Video ${ytId}`, meta?.author || '', config.inboxTheme, now,
+      length?.seconds ?? null, now,
     );
     added.push(toJson(row));
   }
@@ -122,7 +124,7 @@ app.post('/api/triage/apply', (req, res) => {
 // Export / import: the whole board as JSON (thumbnails are re-downloaded on demand).
 app.get('/api/export', (req, res) => {
   const videos = db
-    .prepare('SELECT url, title, author, duration, views, theme, viewed, viewed_at, added_at FROM videos ORDER BY id')
+    .prepare('SELECT url, title, author, duration, length_seconds, views, theme, viewed, viewed_at, added_at FROM videos ORDER BY id')
     .all()
     .map(toJson);
   const date = new Date().toISOString().slice(0, 10);
@@ -136,9 +138,10 @@ app.post('/api/import', (req, res) => {
   const videos = Array.isArray(req.body?.videos) ? req.body.videos : null;
   if (!videos) return res.status(400).json({ error: 'expected { videos: [...] } (a file from Export)' });
   const upsert = db.prepare(
-    `INSERT INTO videos (url, yt_id, title, author, duration, views, theme, viewed, viewed_at, added_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(url) DO UPDATE SET theme = excluded.theme, viewed = excluded.viewed, viewed_at = excluded.viewed_at`,
+    `INSERT INTO videos (url, yt_id, title, author, duration, length_seconds, views, theme, viewed, viewed_at, added_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(url) DO UPDATE SET theme = excluded.theme, viewed = excluded.viewed, viewed_at = excluded.viewed_at,
+       length_seconds = COALESCE(videos.length_seconds, excluded.length_seconds)`,
   );
   const before = db.prepare('SELECT COUNT(*) AS n FROM videos').get().n;
   let skipped = 0;
@@ -146,13 +149,17 @@ app.post('/api/import', (req, res) => {
   for (const v of videos) {
     if (!v?.url || !v?.title) { skipped++; continue; }
     const ytId = extractYtId(v.url);
+    const length = Number.isInteger(v.length_seconds) && v.length_seconds > 0
+      ? v.length_seconds
+      : parseDuration(v.duration);
     upsert.run(
       ytId ? watchUrl(ytId) : String(v.url), ytId, String(v.title), String(v.author ?? ''),
-      String(v.duration ?? ''), String(v.views ?? ''), String(v.theme || config.inboxTheme),
+      String(v.duration ?? ''), length, String(v.views ?? ''), String(v.theme || config.inboxTheme),
       v.viewed ? 1 : 0, v.viewed_at ?? null, v.added_at ?? null,
     );
   }
   db.exec('COMMIT');
+  backfillLengths(); // imported videos without a length, in the background
   const after = db.prepare('SELECT COUNT(*) AS n FROM videos').get().n;
   res.json({ added: after - before, updated: videos.length - skipped - (after - before), skipped });
 });
@@ -174,4 +181,5 @@ if (existsSync(webDist)) {
 
 app.listen(config.port, () => {
   console.log(`yt-kanban listening on :${config.port} (data: ${config.dataDir}, triage: ${triageEnabled() ? 'on' : 'off'})`);
+  backfillLengths(); // not awaited: runs in the background
 });

@@ -9,8 +9,8 @@ It looks and feels like YouTube (its dark and light themes, Roboto, thumbnails, 
 because that is where the videos come from.
 
 - **Add**: "Add" in the top bar, then paste YouTube links, one per line, any format
-  (`watch?v=`, `youtu.be/`, `shorts/`, bare ids). Title, channel and thumbnail are fetched
-  automatically, no YouTube API key needed. New videos land in the inbox column ("Inbox" by
+  (`watch?v=`, `youtu.be/`, `shorts/`, bare ids). Title, channel, thumbnail and length are
+  fetched automatically, no YouTube API key needed. New videos land in the inbox column ("Inbox" by
   default).
 - **Board**: one column per theme, each a compact list like YouTube's "Up next". Click a theme
   (its chip in the filter bar, or its column title) to open it as a full-page grid, where
@@ -45,7 +45,9 @@ browser ──HTTPS──▶ your reverse proxy (TLS + login) ──▶ yt-kanba
 - **Server** (`server/`, Node ≥ 22.13, Express, built-in `node:sqlite`, no native module):
   - `index.js`: routes;
   - `db.js`: schema and numbered migrations (`PRAGMA user_version`);
-  - `youtube.js`: link parsing, oEmbed metadata, thumbnails;
+  - `youtube.js`: link parsing, oEmbed metadata, video length (read from the watch page),
+    thumbnails;
+  - `lengths.js`: background lookup of missing lengths at startup (a couple per second);
   - `triage.js`: the Claude call.
 - **Frontend** (`web/`): Vue 3, Pinia, Tailwind CSS v4, built by Vite into `web/dist`, which
   the server serves. All videos are loaded once and filtered in the browser. Roboto is bundled

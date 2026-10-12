@@ -1,7 +1,7 @@
 <script setup>
 // A video, drawn like YouTube draws one: `row` is the compact "Up next" layout used in the
 // columns, `grid` the home-page layout used when a single theme is open.
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useBoard } from '../stores/board.js';
 import Icon from './Icon.vue';
 import VideoMenu from './VideoMenu.vue';
@@ -14,6 +14,15 @@ const board = useBoard();
 const thumbFailed = ref(false);
 
 const thumb = props.video.yt_id ? `/thumbs/${props.video.yt_id}.jpg` : null;
+// YouTube's format: 4:07, 12:34, 1:02:15 (no leading zero on the first unit)
+const length = computed(() => {
+  const total = props.video.length_seconds;
+  if (!total) return '';
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+});
 const views = props.video.views ? `${Number(props.video.views).toLocaleString('en-US')} views` : '';
 
 function quickToggle() {
@@ -40,8 +49,13 @@ function quickToggle() {
       />
       <span v-else class="grid h-full place-items-center px-2 text-center text-xs text-muted">No thumbnail</span>
 
-      <span v-if="video.duration" class="absolute right-1 bottom-1 rounded bg-black/80 px-1 text-xs font-medium text-white">
-        {{ video.duration }}
+      <!-- Length badge, as on YouTube (sits above the red bar when watched) -->
+      <span
+        v-if="length"
+        class="absolute right-1 rounded bg-black/60 px-1 py-px text-xs leading-4 font-medium text-white tabular-nums"
+        :class="video.viewed ? 'bottom-2' : 'bottom-1'"
+      >
+        {{ length }}
       </span>
       <!-- Watched: YouTube's red progress bar, full -->
       <span v-if="video.viewed" class="absolute inset-x-0 bottom-0 h-1 bg-red" />

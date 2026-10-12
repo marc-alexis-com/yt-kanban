@@ -32,6 +32,53 @@ export async function fetchMetadata(id) {
   }
 }
 
+// Video length in seconds, read from the watch page's ytInitialPlayerResponse
+// (oEmbed has no duration, and the Data API needs a key). Returns
+// { seconds } with seconds = null for a live or upcoming stream, or null when
+// the page could not be read (network error, rate limit, unavailable video).
+const PAGE_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
+  'Accept-Language': 'en-US,en;q=0.9',
+  Cookie: 'SOCS=CAI', // skips the EU cookie consent interstitial
+};
+
+export async function fetchLength(id) {
+  try {
+    const res = await fetch(watchUrl(id), { headers: PAGE_HEADERS, signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return null;
+    const player = extractJsonAfter(await res.text(), 'ytInitialPlayerResponse = ');
+    const details = player?.videoDetails;
+    if (!details || details.videoId !== id) return null;
+    const live = details.isLive || details.isUpcoming
+      || player.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow;
+    const seconds = Number(details.lengthSeconds);
+    return { seconds: !live && Number.isInteger(seconds) && seconds > 0 ? seconds : null };
+  } catch {
+    return null;
+  }
+}
+
+// Parses the JSON object literal that follows `marker` in an HTML page,
+// matching braces while skipping over string contents.
+function extractJsonAfter(html, marker) {
+  const start = html.indexOf(marker);
+  if (start < 0 || html[start + marker.length] !== '{') return null;
+  let depth = 0;
+  let inString = false;
+  for (let i = start + marker.length; i < html.length; i++) {
+    const c = html[i];
+    if (inString) {
+      if (c === '\\') i++;
+      else if (c === '"') inString = false;
+    } else if (c === '"') inString = true;
+    else if (c === '{') depth++;
+    else if (c === '}' && --depth === 0) {
+      return JSON.parse(html.slice(start + marker.length, i + 1));
+    }
+  }
+  return null;
+}
+
 // Thumbnails are cached on disk the first time they are requested, so a lost
 // or partial cache heals itself.
 const inFlight = new Map();

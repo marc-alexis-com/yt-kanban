@@ -26,6 +26,10 @@ const migrations = [
   `ALTER TABLE videos ADD COLUMN yt_id TEXT;
    ALTER TABLE videos ADD COLUMN added_at TEXT;
    CREATE INDEX IF NOT EXISTS videos_theme ON videos(theme);`,
+  // 3: video length in seconds (NULL: unknown or live), and when it was last looked up
+  //    so failures are not retried in a loop. Seeded from v1's "1:02:15" text column.
+  `ALTER TABLE videos ADD COLUMN length_seconds INTEGER;
+   ALTER TABLE videos ADD COLUMN length_checked_at TEXT;`,
 ];
 
 const current = db.prepare('PRAGMA user_version').get().user_version;
@@ -39,6 +43,21 @@ for (let v = current; v < migrations.length; v++) {
     db.exec('ROLLBACK');
     throw err;
   }
+}
+
+// "4:07" / "1:02:15" -> seconds, or null when the text is not a duration.
+export function parseDuration(text) {
+  const m = String(text ?? '').trim().match(/^(?:(\d+):)?(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const seconds = Number(m[1] ?? 0) * 3600 + Number(m[2]) * 60 + Number(m[3]);
+  return seconds > 0 ? seconds : null;
+}
+
+// Legacy (v1 or imported) durations: use them instead of asking YouTube again.
+const setLength = db.prepare('UPDATE videos SET length_seconds = ? WHERE id = ?');
+for (const row of db.prepare("SELECT id, duration FROM videos WHERE length_seconds IS NULL AND duration != ''").all()) {
+  const seconds = parseDuration(row.duration);
+  if (seconds) setLength.run(seconds, row.id);
 }
 
 // Rows imported from v1 (or a JSON import) may lack the YouTube id.
