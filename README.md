@@ -17,7 +17,9 @@ because that is where the videos come from.
   "Rename" renames it (or merges it into another theme).
 - **Each video**: hover the thumbnail for a ✓ that marks it watched; the ⋮ menu marks it
   watched / unwatched, moves it ("Move to…", with "New theme…" to create a theme), or removes
-  it. A watched video gets YouTube's red progress bar under its thumbnail.
+  it. A watched video gets YouTube's red progress bar under its thumbnail, and its length shows
+  in the bottom-right corner of the thumbnail, as on YouTube ("4:07", "1:02:15"; none for a
+  live stream).
 - **Top bar**: search by title or channel, the eye icon shows or hides watched videos (hidden by
   default), and the ⋮ menu opens the settings and exports or imports the whole board as JSON.
 - **Settings**: theme (auto, light, dark; auto follows the system) and card size (small, medium,
@@ -157,6 +159,13 @@ git pull && docker compose up -d --build   # update
 
 **Moving to another server**: export from the old one, import into the new one (import merges
 by URL: new videos are added, existing ones take the imported theme and watched state).
+
+**Video lengths**: fetched when a video is added. Videos without one (an older board, an
+import) are looked up in the background at startup and every 6 hours, about two per second, so
+a board of a few hundred videos fills in within minutes; the logs print `lengths: ...` lines.
+From a server IP, YouTube's regular player asks to "sign in to confirm you're not a bot", so the
+lookup uses YouTube Music's public player endpoint (no key, no account). If YouTube ever
+changes it, lengths stay empty and nothing else breaks.
 
 ## API
 
