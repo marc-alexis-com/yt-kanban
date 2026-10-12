@@ -1,0 +1,8 @@
+# Where this repo goes on eva — read by /usr/local/sbin/eva-deploy on `git push eva main`.
+# Only tracked files are written or deleted: the data (/srv/data/yt-kanban) is never touched,
+# except triage-hints.md which lives in deploy/.
+sync .  /opt/docker/sites/yt-kanban/src  !deploy !README.md
+file deploy/docker-compose.yml  /opt/docker/sites/yt-kanban/docker-compose.yml
+file deploy/triage-hints.md  /srv/data/yt-kanban/triage-hints.md
+# sudo: the env_file /opt/secrets/yt-kanban.env is root 600
+run cd /opt/docker/sites/yt-kanban && sudo docker compose up -d --build && docker image prune -f >/dev/null

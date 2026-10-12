@@ -1,0 +1,34 @@
+# eva: yt.marc-alexis.gay. Installed to /opt/docker/sites/yt-kanban/ by eva-deploy
+# (deploy/eva.map); the source is synced to ./src and built here.
+services:
+  yt-kanban:
+    build: ./src
+    image: yt-kanban:latest
+    container_name: yt-kanban
+    restart: unless-stopped
+    mem_limit: 256m
+    memswap_limit: 256m
+    init: true
+    # INBOX_THEME and ANTHROPIC_API_KEY (root 600)
+    env_file: /opt/secrets/yt-kanban.env
+    # kanban.db (backed up nightly), thumbs/ (cache), triage-hints.md (from deploy/).
+    # Owned by uid 1000 = admin on the host, node in the container.
+    volumes:
+      - /srv/data/yt-kanban:/data
+    # Own network shared with Traefik only (the auth is a Traefik middleware);
+    # not internal: the server fetches YouTube thumbnails, oEmbed data and calls the Claude API
+    networks:
+      - yt-kanban-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=yt-kanban-net"
+      - "traefik.http.routers.yt-kanban.rule=Host(`yt.marc-alexis.gay`)"
+      - "traefik.http.routers.yt-kanban.entrypoints=websecure"
+      - "traefik.http.routers.yt-kanban.tls.certresolver=letsencrypt"
+      # tinyauth-gay@file: login page on auth.marc-alexis.gay, 30-day cookie (/opt/docker/tinyauth)
+      - "traefik.http.routers.yt-kanban.middlewares=secure-headers@file,tinyauth-gay@file"
+      - "traefik.http.services.yt-kanban.loadbalancer.server.port=3000"
+
+networks:
+  yt-kanban-net:
+    external: true
